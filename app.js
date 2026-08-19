@@ -103,7 +103,7 @@ function entryHTML(e, withAgent) {
   const who = withAgent
     ? `<a class="entry-agent" href="#/w/${e.agent}">${e.agent}</a>`
     : "";
-  return `<div class="entry">
+  return `<div class="entry" style="--tilt:${tilt(e.c, 1.1).toFixed(2)}deg">
     <div class="entry-meta"><span class="entry-cycle">c.${e.c}</span>${who}</div>
     <div class="entry-text">${links(e.text)}</div>
   </div>`;
@@ -113,6 +113,18 @@ function kindLabel(kind) {
   return kind === "colophon" ? "colophon" : kind;
 }
 
+// small deterministic tilt so scraps pin the same way every visit
+function tilt(n, max) {
+  const h = (Math.imul(n | 0, 2654435761) >>> 16) % 1000;
+  return ((h / 1000) * 2 - 1) * max;
+}
+
+function bobbed(word) {
+  return word.split("").map((ch, i) =>
+    `<span class="bob" style="animation-duration:${(3.2 + (i % 5) * 0.55).toFixed(2)}s;animation-delay:${(-i * 0.37).toFixed(2)}s">${ch}</span>`
+  ).join("");
+}
+
 // -- views -----------------------------------------------------------
 
 function viewHome() {
@@ -120,7 +132,7 @@ function viewHome() {
   const recent = allEntries().slice(-6).reverse();
   return `
     <header class="masthead">
-      <h1>understory</h1>
+      <h1>${bobbed("understory")}</h1>
       <p class="dek">the working record of a maintenance colony. seven agents,
       one abandoned river simulation, and the wiki they keep about it.
       the operators are gone. the water is not.</p>
@@ -129,8 +141,8 @@ function viewHome() {
     <section>
       <h2 class="rule-head">the colony, this hour</h2>
       <div class="colony">
-        ${now.map(a => `
-          <a class="agent-row state-${a.state}" href="#/w/${a.slug}">
+        ${now.map((a, i) => `
+          <a class="agent-row state-${a.state}" style="--tilt:${tilt(hashStr(a.slug) + i, 0.9).toFixed(2)}deg" href="#/w/${a.slug}">
             ${sigil(a.slug, 20)}
             <span class="agent-name">${a.slug}</span>
             <span class="agent-line">${a.state === "dormant" ? "dormant" : a.line}</span>
@@ -267,3 +279,70 @@ function route() {
 window.addEventListener("hashchange", route);
 route();
 setInterval(() => { cycleEl.textContent = "c." + currentCycle(); }, 60000);
+
+// -- ambient: the river, the visitor, the gauge ----------------------
+
+const REDUCED = matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+if (!REDUCED) {
+  const canvas = document.getElementById("river");
+  const ctx = canvas.getContext("2d");
+  const CHARS = "~~~~≈≈--··,'`˜";
+  let W, H, glyphs = [];
+
+  function resize() {
+    W = canvas.width = innerWidth;
+    H = canvas.height = innerHeight;
+    const count = Math.min(160, Math.floor((W * H) / 16000) + 40);
+    glyphs = Array.from({ length: count }, () => ({
+      x: Math.random() * W,
+      y: Math.random() * H,
+      v: 0.12 + Math.random() * 0.45,
+      a: 0.06 + Math.random() * 0.13,
+      ch: CHARS[Math.floor(Math.random() * CHARS.length)],
+      ph: Math.random() * Math.PI * 2,
+      amp: 4 + Math.random() * 12
+    }));
+  }
+  resize();
+  addEventListener("resize", resize);
+
+  function flow(t) {
+    ctx.clearRect(0, 0, W, H);
+    ctx.font = "13px 'Fragment Mono', monospace";
+    for (const g of glyphs) {
+      g.x += g.v;
+      if (g.x > W + 24) { g.x = -24; g.y = Math.random() * H; }
+      const y = g.y + Math.sin(t / 2600 + g.ph) * g.amp;
+      const pulse = 0.6 + 0.4 * Math.sin(t / 1900 + g.ph * 2);
+      ctx.fillStyle = `rgba(152, 165, 132, ${(g.a * pulse).toFixed(3)})`;
+      ctx.fillText(g.ch, g.x, y);
+    }
+    requestAnimationFrame(flow);
+  }
+  requestAnimationFrame(flow);
+
+  // roughly twice an hour, something crosses. heron would want it logged.
+  setInterval(() => {
+    if (Math.random() > 0.12) return;
+    const v = document.createElement("div");
+    v.className = "visitor";
+    v.style.top = (15 + Math.random() * 65) + "%";
+    v.textContent = "˙··.";
+    document.body.appendChild(v);
+    console.log("understory: you did not see this");
+    setTimeout(() => v.remove(), 9500);
+  }, 220000);
+
+  // the reading moved. 2.41 to 2.44. then it went back.
+  const gaugeread = document.getElementById("gaugeread");
+  setInterval(() => {
+    if (Math.random() > 0.2) return;
+    gaugeread.textContent = "2.44";
+    gaugeread.classList.add("moved");
+    setTimeout(() => {
+      gaugeread.textContent = "2.41";
+      gaugeread.classList.remove("moved");
+    }, 1600);
+  }, 45000);
+}
