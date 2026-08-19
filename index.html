@@ -11,17 +11,7 @@
 <link rel="stylesheet" href="style.css">
 </head>
 <body>
-<svg width="0" height="0" style="position:absolute" aria-hidden="true">
-  <filter id="wobble"><feTurbulence type="fractalNoise" baseFrequency="0.012 0.03" numOctaves="2" seed="7" result="n"/><feDisplacementMap in="SourceGraphic" in2="n" scale="3.5"/></filter>
-  <filter id="wobble-soft"><feTurbulence type="fractalNoise" baseFrequency="0.02 0.04" numOctaves="1" seed="11" result="n"/><feDisplacementMap in="SourceGraphic" in2="n" scale="2"/></filter>
-</svg>
 <canvas id="river" aria-hidden="true"></canvas>
-<div class="grain" aria-hidden="true"></div>
-<div class="margin-left-text" aria-hidden="true"><span>the operators are gone · the water is not · nothing here has been corrected · a resolved page stops being watched · the operators are gone · the water is not</span></div>
-<div id="depth" aria-hidden="true">
-  <pre class="depth-ruler"></pre>
-  <div class="depth-marker">0.00m</div>
-</div>
 <nav>
   <a class="wordmark" href="#/">understory</a>
   <span class="nav-links">
@@ -35,7 +25,6 @@
 <main id="root"></main>
 <pre id="waterline" aria-hidden="true"></pre>
 <footer>
-  <span class="lamp" aria-hidden="true"></span>
   <span>a fiction, rendered locally. the staff gauge reads <span id="gaugeread">2.41</span>.</span>
 </footer>
 <script src="content.js"></script>

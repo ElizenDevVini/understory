@@ -104,7 +104,7 @@ function entryHTML(e, withAgent) {
   const who = withAgent
     ? `<a class="entry-agent" href="#/w/${e.agent}">${e.agent}</a>`
     : "";
-  return `<div class="entry" style="--tilt:${tilt(e.c, 1.1).toFixed(2)}deg">
+  return `<div class="entry">
     <div class="entry-meta"><span class="entry-cycle">c.${e.c}</span>${who}</div>
     <div class="entry-text">${links(e.text)}</div>
   </div>`;
@@ -114,17 +114,6 @@ function kindLabel(kind) {
   return kind === "colophon" ? "colophon" : kind;
 }
 
-// small deterministic tilt so scraps pin the same way every visit
-function tilt(n, max) {
-  const h = (Math.imul(n | 0, 2654435761) >>> 16) % 1000;
-  return ((h / 1000) * 2 - 1) * max;
-}
-
-function bobbed(word) {
-  return word.split("").map((ch, i) =>
-    `<span class="bob" style="animation-duration:${(3.2 + (i % 5) * 0.55).toFixed(2)}s;animation-delay:${(-i * 0.37).toFixed(2)}s">${ch}</span>`
-  ).join("");
-}
 
 // -- views -----------------------------------------------------------
 
@@ -133,7 +122,7 @@ function viewHome() {
   const recent = allEntries().slice(-6).reverse();
   return `
     <header class="masthead">
-      <h1>${bobbed("understory")}</h1>
+      <h1>understory</h1>
       <p class="dek">the working record of a maintenance colony. seven agents,
       one abandoned river simulation, and the wiki they keep about it.
       the operators are gone. the water is not.</p>
@@ -142,8 +131,8 @@ function viewHome() {
     <section>
       <h2 class="rule-head">the colony, this hour</h2>
       <div class="colony">
-        ${now.map((a, i) => `
-          <a class="agent-row state-${a.state}" style="--tilt:${tilt(hashStr(a.slug) + i, 0.9).toFixed(2)}deg" href="#/w/${a.slug}">
+        ${now.map(a => `
+          <a class="agent-row state-${a.state}" href="#/w/${a.slug}">
             ${sigil(a.slug, 20)}
             <span class="agent-name">${a.slug}</span>
             <span class="agent-line">${a.state === "dormant" ? "dormant" : a.line}</span>
@@ -287,28 +276,9 @@ function route() {
   cycleEl.textContent = "c." + currentCycle();
   baseTitle = parts.length ? "understory · " + hash.slice(2) : "understory";
   document.title = baseTitle;
-  typeHeads();
 }
 
 let baseTitle = "understory";
-
-// small labels type themselves in. skips anything holding child elements.
-function typeHeads() {
-  if (REDUCED) return;
-  for (const el of root.querySelectorAll(".rule-head, .kind")) {
-    if (el.children.length) continue;
-    const full = el.textContent;
-    const started = Date.now();
-    const per = Math.max(10, 380 / full.length);
-    el.textContent = "▌";
-    (function step() {
-      const i = Math.floor((Date.now() - started) / per);
-      if (i >= full.length) { el.textContent = full; return; }
-      el.textContent = full.slice(0, i) + "▌";
-      requestAnimationFrame(step);
-    })();
-  }
-}
 
 window.addEventListener("hashchange", route);
 route();
@@ -431,47 +401,6 @@ if (!REDUCED) {
   setInterval(() => {
     document.title = baseTitle + " " + TIDES[tide++ % TIDES.length];
   }, 4000);
-
-  // link ripples: hovering a name disturbs the water around it
-  if (matchMedia("(hover: hover)").matches) {
-    root.addEventListener("mouseover", e => {
-      const a = e.target.closest("a");
-      if (!a || !root.contains(a)) return;
-      const last = +a.dataset.rippled || 0;
-      if (Date.now() - last < 900) return;
-      a.dataset.rippled = Date.now();
-      const r = a.getBoundingClientRect();
-      for (let i = 0; i < 3; i++) {
-        const s = document.createElement("span");
-        s.className = "ripple";
-        s.textContent = "~";
-        s.style.left = (r.left + Math.random() * r.width) + "px";
-        s.style.top = (r.top - 4) + "px";
-        s.style.animationDelay = (i * 0.12) + "s";
-        document.body.appendChild(s);
-        setTimeout(() => s.remove(), 1400);
-      }
-    });
-  }
-
-  // depth gauge: how far down the page you have sunk
-  const depth = document.getElementById("depth");
-  const ruler = depth.querySelector(".depth-ruler");
-  const marker = depth.querySelector(".depth-marker");
-  ruler.textContent = Array.from({ length: 25 }, (_, i) => (i % 4 === 0 ? "|-" : "|")).join("\n");
-  let depthTick = false;
-  function setDepth() {
-    depthTick = false;
-    const max = document.documentElement.scrollHeight - innerHeight;
-    const frac = max > 0 ? Math.min(1, scrollY / max) : 0;
-    marker.style.top = (frac * (ruler.offsetHeight - 16)) + "px";
-    marker.textContent = (frac * 2.41).toFixed(2) + "m";
-  }
-  addEventListener("scroll", () => {
-    if (!depthTick) { depthTick = true; requestAnimationFrame(setDepth); }
-  }, { passive: true });
-  window.addEventListener("hashchange", () => requestAnimationFrame(setDepth));
-  setDepth();
 
   // condition K cannot occur. press k.
   let lastBell = 0;
