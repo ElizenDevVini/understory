@@ -56,11 +56,13 @@ body {
   100% { transform: translate(0, 0); }
 }
 
-.margin-left-text, .margin-right-text {
+.margin-left-text {
   position: fixed;
   top: 0;
   bottom: 0;
+  left: 0.8rem;
   writing-mode: vertical-rl;
+  transform: rotate(180deg);
   font-family: var(--mono);
   font-size: 10px;
   letter-spacing: 0.35em;
@@ -72,11 +74,17 @@ body {
   pointer-events: none;
   animation: margin-breathe 11s ease-in-out infinite alternate;
 }
-.margin-left-text { left: 0.8rem; transform: rotate(180deg); }
-.margin-right-text { right: 0.8rem; animation-delay: -5s; }
+.margin-left-text span {
+  display: inline-block;
+  animation: margin-drift 38s ease-in-out infinite alternate;
+}
 @keyframes margin-breathe {
   from { opacity: 0.35; }
   to { opacity: 0.9; }
+}
+@keyframes margin-drift {
+  from { transform: translateY(-40px); }
+  to { transform: translateY(40px); }
 }
 
 /* the visitor. rare. you did not see this. */
@@ -182,6 +190,15 @@ main.arrive > *:nth-child(n+5), main.arrive article > *:nth-child(n+5) { animati
 @keyframes arrive {
   from { opacity: 0; transform: translateY(14px) rotate(0.4deg); }
   to { opacity: 1; transform: translateY(0) rotate(0deg); }
+}
+
+/* the whole page surfaces out of the water on each route.
+   no fill mode: a persistent filter on a very tall main blanks out
+   past the GPU texture limit, so the filter must detach when done. */
+main.arrive { animation: surface 0.65s ease-out; }
+@keyframes surface {
+  from { filter: blur(5px); }
+  to { filter: blur(0); }
 }
 
 footer {
@@ -432,10 +449,163 @@ article p { margin-bottom: 1.05rem; max-width: 38rem; }
 .index-list li { padding: 0.18rem 0; break-inside: avoid; }
 .index-list li::before { content: "~ "; color: var(--dimmer); font-family: var(--mono); }
 
+/* ascii art ---------------------------------------------------------*/
+
+.ascii {
+  font-family: var(--mono);
+  font-size: 12.5px;
+  line-height: 1.35;
+  color: var(--dim);
+  overflow-x: auto;
+  margin-bottom: 1.6rem;
+  filter: url(#wobble-soft);
+}
+.ascii a { color: var(--phosphor); text-decoration-color: var(--dimmer); }
+.ascii a:hover { color: var(--rust); }
+
+.scene {
+  animation: scene-shimmer 6s ease-in-out infinite alternate;
+  transform: rotate(-0.4deg);
+}
+@keyframes scene-shimmer {
+  from { opacity: 0.55; }
+  to { opacity: 1; }
+}
+
+.map-art {
+  padding: 1.2rem 0.8rem;
+  border: 1px dashed var(--pool-edge);
+  animation: map-drift 14s ease-in-out infinite alternate;
+}
+@keyframes map-drift {
+  from { transform: rotate(-0.35deg) translateY(-2px); }
+  to { transform: rotate(0.35deg) translateY(2px); }
+}
+
+/* the waterline -----------------------------------------------------*/
+
+#waterline {
+  width: 100%;
+  overflow: hidden;
+  white-space: nowrap;
+  font-family: var(--mono);
+  font-size: 13px;
+  line-height: 1;
+  color: var(--dimmer);
+  text-align: center;
+  padding: 0.4rem 0 0.1rem;
+  position: relative;
+  z-index: 2;
+  pointer-events: none;
+}
+
+/* boot --------------------------------------------------------------*/
+
+#boot {
+  position: fixed;
+  inset: 0;
+  z-index: 100;
+  background: var(--night);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: opacity 0.7s ease, transform 0.7s ease;
+}
+#boot pre {
+  font-family: var(--mono);
+  font-size: 13px;
+  line-height: 1.9;
+  color: var(--dim);
+}
+#boot.lift { opacity: 0; transform: translateY(-14px); pointer-events: none; }
+
+/* ripples -----------------------------------------------------------*/
+
+.ripple {
+  position: fixed;
+  z-index: 50;
+  font-family: var(--mono);
+  font-size: 11px;
+  color: var(--phosphor);
+  pointer-events: none;
+  animation: ripple-rise 1.1s ease-out both;
+}
+@keyframes ripple-rise {
+  from { opacity: 0.8; transform: translateY(0) rotate(0deg); }
+  to { opacity: 0; transform: translateY(-26px) rotate(20deg); }
+}
+
+/* depth gauge -------------------------------------------------------*/
+
+#depth {
+  position: fixed;
+  right: 1.1rem;
+  top: 50%;
+  transform: translateY(-50%);
+  z-index: 1;
+  font-family: var(--mono);
+  pointer-events: none;
+}
+.depth-ruler {
+  font-size: 9px;
+  line-height: 1.6;
+  color: var(--dimmer);
+}
+.depth-marker {
+  position: absolute;
+  right: 1.1rem;
+  top: 0;
+  font-size: 10px;
+  color: var(--phosphor);
+  white-space: nowrap;
+  transition: top 0.15s linear;
+}
+.depth-marker::after { content: " <"; color: var(--dimmer); }
+
+/* the bell ----------------------------------------------------------*/
+
+.bell-toast {
+  position: fixed;
+  left: 1.4rem;
+  bottom: 1.6rem;
+  z-index: 90;
+  display: flex;
+  gap: 1rem;
+  align-items: center;
+  padding: 0.9rem 1.1rem;
+  background: var(--pool);
+  border: 1px dashed var(--dim);
+  font-family: var(--mono);
+  font-size: 12px;
+  color: var(--bone);
+  line-height: 1.7;
+  animation: bell-in 0.5s cubic-bezier(0.2, 0.8, 0.25, 1) both;
+  transition: opacity 0.8s ease;
+}
+.bell-toast pre {
+  font-size: 11px;
+  line-height: 1.2;
+  color: var(--rust);
+  animation: bell-shake 0.4s ease-in-out 3;
+}
+.bell-toast.gone { opacity: 0; }
+@keyframes bell-in {
+  from { transform: translateY(30px) rotate(-2deg); opacity: 0; }
+  to { transform: none; opacity: 1; }
+}
+@keyframes bell-shake {
+  0%, 100% { transform: rotate(0deg); }
+  30% { transform: rotate(-8deg); }
+  70% { transform: rotate(8deg); }
+}
+
 /* small screens / reduced motion ------------------------------------*/
 
+@media (max-width: 900px) {
+  #depth { display: none; }
+}
 @media (max-width: 700px) {
-  .margin-left-text, .margin-right-text { display: none; }
+  .margin-left-text { display: none; }
 }
 @media (max-width: 560px) {
   body { font-size: 17px; }
@@ -450,4 +620,6 @@ article p { margin-bottom: 1.05rem; max-width: 38rem; }
   *, *::before, *::after { animation: none !important; transition: none !important; }
   .grain { display: none; }
   #river { display: none; }
+  #waterline { display: none; }
+  #depth { display: none; }
 }

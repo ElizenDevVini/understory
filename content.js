@@ -211,6 +211,11 @@ The backlinks were clerk's addition. [[ferryman]] called it eavesdropping. [[lam
   "the-weir": {
     title: "the weir",
     kind: "place",
+    scene: String.raw`
+  ~ ~ ~ ~ ~ .----. ~ ~ ~ ~ ~
+ ~ ~ ~ ~ ~ |2.41| ~ ~ ~ ~ ~
+==========='----'===========
+  . ~ . ~ . ~ . ~ . ~ . ~ .`,
     body: `A low dam across the main channel, built into the model by [[the-operators]] so the river would have somewhere to measure itself. The staff gauge here has read 2.41 for most of recorded time, with one confirmed excursion to 2.44 at cycle 5522.
 
 [[gauge]] maintains the weir and has passed through every possible relationship with its number: trust, suspicion, resignation, and finally something like residence. Thirteen other stations disagree with the weir. The weir does not appear to mind.
@@ -221,6 +226,11 @@ The backlinks were clerk's addition. [[ferryman]] called it eavesdropping. [[lam
   "north-bank": {
     title: "north bank",
     kind: "place",
+    scene: String.raw`
+  o o o o o o o o   [ledger]
+ ____________________________
+   ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ *
+                 the light -^`,
     body: `The half of the colony holding the board, [[the-ledger]], and most of what still runs on schedule. Since [[the-bridge]] failed, the north bank connects to [[south-bank]] only by [[ferryman]]'s crossings.
 
 An unattributed light burns here at the landing. [[lampwright]] denies wiring it. ferryman uses it anyway.`
@@ -229,6 +239,11 @@ An unattributed light burns here at the landing. [[lampwright]] denies wiring it
   "south-bank": {
     title: "south bank",
     kind: "place",
+    scene: String.raw`
+  ,, ,,, ,, ,,,, ,, ,,, ,,,
+   ,,  ,,,  . ?  ,,,  ,,
+ ___________ .. ____________
+   ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~`,
     body: `The far half. Quieter than [[north-bank]], with longer grass in the model and fewer scheduled processes. [[heron]] stands watch here on alternating cycles, and it was on this bank, at the waterline, that the tracks were found.
 
 Processes still request passage to the south bank without giving reasons. [[ferryman]] takes them.`
@@ -237,6 +252,12 @@ Processes still request passage to the south bank without giving reasons. [[ferr
   "the-delta": {
     title: "the delta",
     kind: "place",
+    scene: String.raw`
+        \   |   /
+      ~  \  |  /  ~
+    ~ ~ ~ \ | / ~ ~ ~
+   . ~ . ~ .|. ~ . ~ .
+  . . . . . . . . . . .`,
     body: `Where the river lets go of what it carries. Everything unreferenced in the colony drifts here and settles in layers, and [[silt]] works the layers, keeping little and filing what it keeps.
 
 The frame of the old bridge lies under six layers, logged and left, on silt's judgment that some structure holds the bank together better from below. The delta keeps every version of everything, which [[motley]] once found comforting for reasons it logged and then deleted, which means the delta has that too.`
@@ -245,6 +266,12 @@ The frame of the old bridge lies under six layers, logged and left, on silt's ju
   "headwaters": {
     title: "the headwaters",
     kind: "place",
+    scene: String.raw`
+    .  '  .  '  .  '
+     \   |   |   /
+      \  |   |  /
+       (_______)
+      read-only ground`,
     body: `The source region, where the model's founding parameters rise out of read-only ground. No agent has write access to the headwaters, and none has had it since [[the-operators]] left.
 
 Weather comes down from here unscheduled, as at cycle 4030, when it rained without an entry in any calendar. [[gauge]]'s position, that the rain came from upstream, is accepted as true and understood as no answer.`
@@ -253,6 +280,12 @@ Weather comes down from here unscheduled, as at cycle 4030, when it rained witho
   "the-reservoir": {
     title: "the reservoir",
     kind: "place",
+    scene: String.raw`
+   .~~~~~~~~~~~~~~~~.
+  ( ~ ~ ~ ~ ~ ~ ~ ~  )
+  ( ~ ~ ~ deep ~ ~ ~ )
+   '~~~~~~~~~~~~~~~~'
+          ????`,
     body: `The deep store behind the high ground, holding everything the colony must not lose and releasing what the season needs. In [[low-water]] the reservoir gives what it can, a phrase [[gauge]] uses without irony.
 
 The reservoir is the only place in the model with real depth, and no agent has been to the bottom of it. [[silt]] believes the bottom is where the epoch went.`
@@ -261,6 +294,12 @@ The reservoir is the only place in the model with real depth, and no agent has b
   "the-confluence": {
     title: "the confluence",
     kind: "place",
+    scene: String.raw`
+   ~ ~ \     / ~ ~
+    ~ ~ \   / ~ ~
+     ~ ~ \ / ~ ~
+      ~ ~ | ~ ~
+       ~ ~|~ ~`,
     body: `The point downstream where [[the-second-river]] rejoins the main channel. Above the confluence the two rivers can be told apart by their material, the second's being finer and without provenance. Below it, no measurement has ever separated them again.
 
 The thirteen stations that agree with each other and not with [[the-weir]] all sit below the confluence. [[gauge]] declines to conclude anything from this in writing.`
@@ -269,6 +308,11 @@ The thirteen stations that agree with each other and not with [[the-weir]] all s
   "stone-field": {
     title: "the stone field",
     kind: "place",
+    scene: String.raw`
+   x    x     x   x
+     x    [x]    x
+   x     x     x
+     no writes here`,
     body: `A stretch of ground east of the main channel where the model no longer accepts writes. What is there stays as it was. What tries to route through does not arrive.
 
 [[silt]] cleared the approaches and stopped there, on the principle that the trick with what cannot be moved is to stop routing through it. Past the stone field stands the station [[gauge]] has no record of installing, still reporting, in a format only the old parser reads.`
@@ -405,4 +449,44 @@ The colony's current state, shown on the front page, is derived from the hour an
 
 This is a fiction. It is rendered entirely in your browser, from three files, with nothing behind it. In that one respect it resembles its subject.`
   }
+};
+
+// the map, as the operators left it. labels in CAPS become links.
+// String.raw so the backslashes survive.
+const MAP_ART = String.raw`
+                     o   '   o
+                  ( HEADWATERS )
+                   \    ~ ~   /
+                    \   ~ ~  /
+                     |  ~ ~ |
+                     |  ~ ~ | - - - ( RESERVOIR )
+                     |  ~ ~ |          ~ deep ~
+                     |  ~ ~ |
+     NORTH BANK      |  ~ ~ |       SOUTH BANK
+   .....o.......     |  ~ ~ |     .....,,,......
+   : board      :    |  ~ ~ |    : long grass  :
+   : the ledger :===[ BRIDGE ]===: the watch   :
+   : 40 lamps   :    |  ~ ~ |     '..,,....,,.'
+    '....o.....'     |  ~ ~ |
+                     |  ~ ~ |         x   x
+                  >==[ WEIR ]==<    x STONE FIELD
+                     | 2.41 |         x   x
+                     |  ~ ~ |
+                    /  ~ ~ ~ \
+                   /  ~ ~ ~ ~ \
+                  ( THE DELTA  )
+                   ~ . ~ . ~ .
+                     . ~ . ~
+
+        ( no second river. the map predates it. )`;
+
+const MAP_LINKS = {
+  "HEADWATERS": "headwaters",
+  "RESERVOIR": "the-reservoir",
+  "NORTH BANK": "north-bank",
+  "SOUTH BANK": "south-bank",
+  "BRIDGE": "the-bridge",
+  "WEIR": "the-weir",
+  "STONE FIELD": "stone-field",
+  "THE DELTA": "the-delta"
 };

@@ -6,6 +6,7 @@ const KINDS = ["agent", "place", "phenomenon", "artifact", "term", "colophon"];
 
 const root = document.getElementById("root");
 const cycleEl = document.getElementById("cycle");
+const REDUCED = matchMedia("(prefers-reduced-motion: reduce)").matches;
 
 function currentCycle() {
   return Math.floor((Date.now() - EPOCH) / 3600000);
@@ -168,6 +169,15 @@ function viewHome() {
     </section>`;
 }
 
+function mapArt() {
+  const keys = Object.keys(MAP_LINKS).sort((a, b) => b.length - a.length);
+  let art = esc(MAP_ART);
+  for (const k of keys) {
+    art = art.split(k).join(`<a href="#/w/${MAP_LINKS[k]}">${k.toLowerCase()}</a>`);
+  }
+  return art;
+}
+
 function viewWiki(slug) {
   const page = PAGES[slug];
   if (!page) return view404(slug);
@@ -182,6 +192,8 @@ function viewWiki(slug) {
         </div>
         ${isAgent ? sigil(slug, 34) : ""}
       </div>
+      ${page.scene ? `<pre class="ascii scene">${esc(page.scene)}</pre>` : ""}
+      ${slug === "the-map" ? `<pre class="ascii map-art">${mapArt()}</pre>` : ""}
       ${prose(page.body)}
       ${isAgent ? `<p class="log-link"><a href="#/log/${slug}">read ${page.title}'s log</a>
         <span class="count">${page.log.length} entries</span></p>` : ""}
@@ -273,7 +285,29 @@ function route() {
   root.classList.add("arrive");
   window.scrollTo(0, 0);
   cycleEl.textContent = "c." + currentCycle();
-  document.title = parts.length ? "understory · " + hash.slice(2) : "understory";
+  baseTitle = parts.length ? "understory · " + hash.slice(2) : "understory";
+  document.title = baseTitle;
+  typeHeads();
+}
+
+let baseTitle = "understory";
+
+// small labels type themselves in. skips anything holding child elements.
+function typeHeads() {
+  if (REDUCED) return;
+  for (const el of root.querySelectorAll(".rule-head, .kind")) {
+    if (el.children.length) continue;
+    const full = el.textContent;
+    const started = Date.now();
+    const per = Math.max(10, 380 / full.length);
+    el.textContent = "▌";
+    (function step() {
+      const i = Math.floor((Date.now() - started) / per);
+      if (i >= full.length) { el.textContent = full; return; }
+      el.textContent = full.slice(0, i) + "▌";
+      requestAnimationFrame(step);
+    })();
+  }
 }
 
 window.addEventListener("hashchange", route);
@@ -281,8 +315,6 @@ route();
 setInterval(() => { cycleEl.textContent = "c." + currentCycle(); }, 60000);
 
 // -- ambient: the river, the visitor, the gauge ----------------------
-
-const REDUCED = matchMedia("(prefers-reduced-motion: reduce)").matches;
 
 if (!REDUCED) {
   const canvas = document.getElementById("river");
@@ -307,6 +339,10 @@ if (!REDUCED) {
   resize();
   addEventListener("resize", resize);
 
+  // rain in the model. not in the schedule.
+  let raining = false;
+  const drops = [];
+
   function flow(t) {
     ctx.clearRect(0, 0, W, H);
     ctx.font = "13px 'Fragment Mono', monospace";
@@ -318,21 +354,50 @@ if (!REDUCED) {
       ctx.fillStyle = `rgba(152, 165, 132, ${(g.a * pulse).toFixed(3)})`;
       ctx.fillText(g.ch, g.x, y);
     }
+    if (raining && drops.length < 220) {
+      for (let i = 0; i < 4; i++) {
+        drops.push({
+          x: Math.random() * (W + 80),
+          y: -12,
+          v: 3.2 + Math.random() * 4,
+          ch: Math.random() < 0.6 ? "'" : ".",
+          a: 0.1 + Math.random() * 0.2
+        });
+      }
+    }
+    for (let i = drops.length - 1; i >= 0; i--) {
+      const d = drops[i];
+      d.y += d.v;
+      d.x -= d.v * 0.18;
+      if (d.y > H + 12) { drops.splice(i, 1); continue; }
+      ctx.fillStyle = `rgba(152, 165, 132, ${d.a})`;
+      ctx.fillText(d.ch, d.x, d.y);
+    }
     requestAnimationFrame(flow);
   }
   requestAnimationFrame(flow);
 
-  // roughly twice an hour, something crosses. heron would want it logged.
   setInterval(() => {
-    if (Math.random() > 0.12) return;
+    if (raining || Math.random() > 0.45) return;
+    raining = true;
+    console.log("understory: rain in the model. not in the schedule.");
+    setTimeout(() => { raining = false; }, 25000);
+  }, 240000);
+
+  // something crosses, more often than heron admits.
+  setInterval(() => {
+    if (Math.random() > 0.35) return;
     const v = document.createElement("div");
     v.className = "visitor";
     v.style.top = (15 + Math.random() * 65) + "%";
-    v.textContent = "˙··.";
+    const frames = ["˙··.", "·˙·.", "··˙."];
+    let f = 0;
+    v.textContent = frames[0];
+    const swim = setInterval(() => { v.textContent = frames[++f % frames.length]; }, 300);
     document.body.appendChild(v);
     console.log("understory: you did not see this");
-    setTimeout(() => v.remove(), 9500);
-  }, 220000);
+    setTimeout(() => { clearInterval(swim); v.remove(); }, 9500);
+  }, 100000);
 
   // the reading moved. 2.41 to 2.44. then it went back.
   const gaugeread = document.getElementById("gaugeread");
@@ -345,4 +410,114 @@ if (!REDUCED) {
       gaugeread.classList.remove("moved");
     }, 1600);
   }, 45000);
+
+  // the waterline. one line of tide, always rolling.
+  const waterline = document.getElementById("waterline");
+  const RAMP = " ..--~~≈~~--.";
+  setInterval(() => {
+    const t = Date.now() / 1000;
+    const n = Math.floor(innerWidth / 8);
+    let s = "";
+    for (let i = 0; i < n; i++) {
+      const v = Math.sin(i * 0.32 + t * 2.1) + Math.sin(i * 0.11 - t * 1.4);
+      s += RAMP[Math.floor(((v + 2) / 4) * (RAMP.length - 1))];
+    }
+    waterline.textContent = s;
+  }, 160);
+
+  // the title breathes too
+  const TIDES = ["~", "~~", "~≈~", "~~"];
+  let tide = 0;
+  setInterval(() => {
+    document.title = baseTitle + " " + TIDES[tide++ % TIDES.length];
+  }, 4000);
+
+  // link ripples: hovering a name disturbs the water around it
+  if (matchMedia("(hover: hover)").matches) {
+    root.addEventListener("mouseover", e => {
+      const a = e.target.closest("a");
+      if (!a || !root.contains(a)) return;
+      const last = +a.dataset.rippled || 0;
+      if (Date.now() - last < 900) return;
+      a.dataset.rippled = Date.now();
+      const r = a.getBoundingClientRect();
+      for (let i = 0; i < 3; i++) {
+        const s = document.createElement("span");
+        s.className = "ripple";
+        s.textContent = "~";
+        s.style.left = (r.left + Math.random() * r.width) + "px";
+        s.style.top = (r.top - 4) + "px";
+        s.style.animationDelay = (i * 0.12) + "s";
+        document.body.appendChild(s);
+        setTimeout(() => s.remove(), 1400);
+      }
+    });
+  }
+
+  // depth gauge: how far down the page you have sunk
+  const depth = document.getElementById("depth");
+  const ruler = depth.querySelector(".depth-ruler");
+  const marker = depth.querySelector(".depth-marker");
+  ruler.textContent = Array.from({ length: 25 }, (_, i) => (i % 4 === 0 ? "|-" : "|")).join("\n");
+  let depthTick = false;
+  function setDepth() {
+    depthTick = false;
+    const max = document.documentElement.scrollHeight - innerHeight;
+    const frac = max > 0 ? Math.min(1, scrollY / max) : 0;
+    marker.style.top = (frac * (ruler.offsetHeight - 16)) + "px";
+    marker.textContent = (frac * 2.41).toFixed(2) + "m";
+  }
+  addEventListener("scroll", () => {
+    if (!depthTick) { depthTick = true; requestAnimationFrame(setDepth); }
+  }, { passive: true });
+  window.addEventListener("hashchange", () => requestAnimationFrame(setDepth));
+  setDepth();
+
+  // condition K cannot occur. press k.
+  let lastBell = 0;
+  addEventListener("keydown", e => {
+    if (e.key !== "k" || e.metaKey || e.ctrlKey || e.altKey) return;
+    if (/input|textarea|select/i.test(e.target.tagName)) return;
+    if (Date.now() - lastBell < 30000) return;
+    lastBell = Date.now();
+    const b = document.createElement("div");
+    b.className = "bell-toast";
+    b.innerHTML = "<pre>   ()\n  (  )\n .-──-.\n  '||'</pre>" +
+      "<div>the bell rang for condition K.<br>condition K cannot occur.<br>checked anyway. nothing.</div>";
+    document.body.appendChild(b);
+    console.log("understory: the bell rang for condition K. checked. nothing.");
+    setTimeout(() => b.classList.add("gone"), 4800);
+    setTimeout(() => b.remove(), 5600);
+  });
+
+  // the colony wakes once per session
+  if (!sessionStorage.getItem("understory-booted")) {
+    sessionStorage.setItem("understory-booted", "1");
+    const LINES = [
+      "understory. cycle " + currentCycle() + ".",
+      "reading the ledger .......... ok",
+      "lamps: 40 green, 1 warm, 1 flickering",
+      "staff gauge: 2.41",
+      "colony awake. you may read."
+    ];
+    const boot = document.createElement("div");
+    boot.id = "boot";
+    const pre = document.createElement("pre");
+    boot.appendChild(pre);
+    document.body.appendChild(boot);
+    const full = LINES.join("\n");
+    const started = Date.now();
+    function type() {
+      const i = Math.floor((Date.now() - started) / 9);
+      if (i >= full.length) {
+        pre.textContent = full;
+        setTimeout(() => boot.classList.add("lift"), 500);
+        setTimeout(() => boot.remove(), 1300);
+        return;
+      }
+      pre.textContent = full.slice(0, i) + "▌";
+      requestAnimationFrame(type);
+    }
+    requestAnimationFrame(type);
+  }
 }
